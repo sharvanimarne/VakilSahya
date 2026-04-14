@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-ink-50 text-ink-800 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-ink-100; }
+  ::-webkit-scrollbar-thumb { @apply bg-ink-300 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-ink-400; }
+
+  ::selection { @apply bg-gold-200 text-ink-900; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-ink-800 text-ink-50 text-sm font-medium
+           rounded-lg hover:bg-ink-700 active:bg-ink-900 transition-colors duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-white text-ink-700 text-sm font-medium
+           rounded-lg border border-ink-200 hover:bg-ink-50 active:bg-ink-100
+           transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 text-ink-500 text-sm font-medium
+           rounded-lg hover:bg-ink-100 hover:text-ink-700 transition-colors duration-150;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-ink-200 rounded-lg text-ink-800 text-sm
+           placeholder-ink-300 outline-none transition-all duration-150
+           focus:border-ink-500 focus:ring-2 focus:ring-ink-100;
+  }
+
+  .card {
+    @apply bg-white border border-ink-100 rounded-xl shadow-sm;
+  }
+
+  .severity-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .severity-low      { @apply bg-green-50  text-green-700  border border-green-100; }
+  .severity-medium   { @apply bg-amber-50  text-amber-700  border border-amber-100; }
+  .severity-high     { @apply bg-red-50    text-red-700    border border-red-100; }
+  .severity-critical { @apply bg-purple-50 text-purple-700 border border-purple-100; }
+
+  .page-enter { @apply animate-fade-up; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .scrollbar-hide { scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+/* Stagger animation utility classes */
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }

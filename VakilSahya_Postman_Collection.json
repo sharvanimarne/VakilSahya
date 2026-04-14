@@ -1,0 +1,273 @@
+{
+  "info": {
+    "name": "VakilSahay API — 10 Test Cases",
+    "description": "Complete Postman test suite for VakilSahay Legal Document Analyzer API.\nCovers Assignment 5 requirements.\n© 2025 VakilSahay",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",  "value": "http://localhost:8080/api" },
+    { "key": "token",    "value": "" },
+    { "key": "docId",    "value": "" }
+  ],
+  "item": [
+    {
+      "name": "TC-01 — Register new user",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/register",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@vakilsahay.in\",\n  \"fullName\": \"Test User\",\n  \"password\": \"Test@1234\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Response has token', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('token');",
+            "  pm.collectionVariables.set('token', json.token);",
+            "});",
+            "pm.test('Response has user object', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.user).to.have.property('email');",
+            "  pm.expect(json.user.email).to.equal('testuser@vakilsahay.in');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-02 — Login and capture JWT",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/login",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@vakilsahay.in\",\n  \"password\": \"Test@1234\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('JWT token is returned', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.token).to.be.a('string').and.have.length.above(10);",
+            "  pm.collectionVariables.set('token', json.token);",
+            "});",
+            "pm.test('Token type is Bearer', () => {",
+            "  pm.expect(pm.response.json().tokenType).to.equal('Bearer');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-03 — Login with wrong password (expect 401)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/login",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@vakilsahay.in\",\n  \"password\": \"WrongPassword!\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 401 Unauthorized', () => pm.response.to.have.status(401));",
+            "pm.test('Error message is present', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('message');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-04 — Upload a document",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/documents/upload",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "body": {
+          "mode": "formdata",
+          "formdata": [{
+            "key": "file",
+            "type": "file",
+            "src": "sample_rental_agreement.txt",
+            "description": "Upload any .txt or .pdf file"
+          }]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 202 Accepted', () => pm.response.to.have.status(202));",
+            "pm.test('Document ID is returned', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('id');",
+            "  pm.collectionVariables.set('docId', json.id);",
+            "});",
+            "pm.test('Status is UPLOADED or ANALYZING', () => {",
+            "  const status = pm.response.json().status;",
+            "  pm.expect(['UPLOADED', 'ANALYZING']).to.include(status);",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-05 — Get all documents (list)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/documents?page=0&size=10",
+          "query": [
+            { "key": "page", "value": "0" },
+            { "key": "size", "value": "10" }
+          ]
+        },
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Response has paginated content', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('content');",
+            "  pm.expect(json.content).to.be.an('array');",
+            "});",
+            "pm.test('Pagination metadata present', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('totalElements');",
+            "  pm.expect(json).to.have.property('totalPages');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-06 — Get document by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/{{docId}}",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Document has required fields', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('id');",
+            "  pm.expect(json).to.have.property('originalName');",
+            "  pm.expect(json).to.have.property('status');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-07 — Get clauses (all)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/{{docId}}/clauses",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Response is an array', () => {",
+            "  pm.expect(pm.response.json()).to.be.an('array');",
+            "});",
+            "pm.test('Each clause has severity and score', () => {",
+            "  const clauses = pm.response.json();",
+            "  if (clauses.length > 0) {",
+            "    pm.expect(clauses[0]).to.have.property('severity');",
+            "    pm.expect(clauses[0]).to.have.property('severityScore');",
+            "    pm.expect(clauses[0]).to.have.property('plainEnglish');",
+            "  }",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-08 — Filter clauses by severity=HIGH",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/documents/{{docId}}/clauses?severity=HIGH",
+          "query": [{ "key": "severity", "value": "HIGH" }]
+        },
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('All returned clauses are HIGH severity', () => {",
+            "  const clauses = pm.response.json();",
+            "  clauses.forEach(c => pm.expect(c.severity).to.equal('HIGH'));",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-09 — Re-analyze document (PUT)",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/documents/{{docId}}/reanalyze",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 202 Accepted', () => pm.response.to.have.status(202));",
+            "pm.test('Document status is ANALYZING', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(['ANALYZING', 'UPLOADED']).to.include(json.status);",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "TC-10 — Delete document",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/documents/{{docId}}",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 204 No Content', () => pm.response.to.have.status(204));",
+            "pm.test('Response body is empty', () => {",
+            "  pm.expect(pm.response.text()).to.be.empty;",
+            "});"
+          ]
+        }
+      }]
+    }
+  ]
+}
